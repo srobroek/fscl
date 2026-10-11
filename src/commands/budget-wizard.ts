@@ -5,6 +5,7 @@ import { api } from '../actual-api.js';
 import * as p from '@clack/prompts';
 
 import { loginToServer } from '../auth.js';
+import { requirePassword } from '../password.js';
 import { withApi } from '../budget.js';
 import type { Config } from '../types.js';
 import { budgetRows, type BudgetRow } from './common.js';
@@ -300,16 +301,15 @@ export async function collectBudgetSetup(
     'server URL',
   );
 
-  const pw = requireValue(
+  const pw = requirePassword(
     cancelledOrValue(
       await p.password({
         message: 'Server password',
         validate: (v) => {
-          if (!v?.trim()) return 'Server password is required.';
+          if (!v?.length) return 'Server password is required.';
         },
       }),
     ),
-    'server password',
   );
   const token = await loginToServer(serverURL, pw);
 
@@ -343,9 +343,8 @@ export async function collectBudgetSetupNonInteractive(
     options.serverUrl ?? process.env.FISCAL_SERVER_URL,
     '--server-url',
   );
-  const password = requireValue(
+  const password = requirePassword(
     options.password ?? process.env.FISCAL_PASSWORD,
-    '--password',
   );
   const token = await loginToServer(serverURL, password);
 

@@ -7,6 +7,7 @@ import { loginToServer } from '../auth.js';
 import { commandAction } from '../cli.js';
 import { readConfig, updateConfig } from '../config.js';
 import { printStatusOk } from '../output.js';
+import { requirePassword } from '../password.js';
 import { getActionCommand } from './common.js';
 
 type LoginCommandOptions = {
@@ -34,8 +35,8 @@ function writeAuthConfig(patch: { serverURL?: string; token?: string }): void {
 }
 
 async function resolvePassword(optionPassword: string | undefined): Promise<string> {
-  if (optionPassword?.trim()) {
-    return optionPassword.trim();
+  if (optionPassword !== undefined) {
+    return requirePassword(optionPassword);
   }
 
   if (!stdin.isTTY || !stdout.isTTY) {
@@ -46,13 +47,13 @@ async function resolvePassword(optionPassword: string | undefined): Promise<stri
     await p.password({
       message: 'Server password',
       validate: (input) => {
-        if (!input?.trim()) {
+        if (!input?.length) {
           return 'Server password is required.';
         }
       },
     }),
   );
-  return requireValue(value, 'server password');
+  return requirePassword(value);
 }
 
 export function registerAuthCommands(program: Command) {

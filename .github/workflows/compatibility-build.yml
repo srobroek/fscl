@@ -1,0 +1,74 @@
+name: Compatibility build
+on:
+  push:
+    branches: [actual-26.10-compat]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: ['22', '24']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - run: npm test -- --run
+      - run: node --import tsx tests/prompt-probe.mjs
+  artifact:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Start disposable synthetic Actual server
+        run: |
+          docker run -d --name synthetic-actual -p 127.0.0.1:15007:5006 --tmpfs /data actualbudget/actual-server:26.10.0
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:15007/account/needs-bootstrap >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+      - name: Verify isolated sync
+        env:
+          FSCL_SYNTHETIC_SERVER_URL: http://127.0.0.1:15007
+          FSCL_COMPAT_RECEIPT: sync-receipt.json
+        run: node tests/sync-compat.mjs
+      - name: Package exact tested commit
+        run: |
+          mkdir artifact
+          npm pack --ignore-scripts --pack-destination artifact
+          printf '%s\n' "$GITHUB_SHA" > artifact/COMMIT.txt
+          printf '%s/actions/runs/%s\n' "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" > artifact/BUILD.txt
+          node --version > artifact/NODE.txt
+          docker image inspect actualbudget/actual-server:26.10.0 --format '{{json .RepoDigests}}' > artifact/SERVER-IMAGE.json
+          cp LICENSE FORK.json INSTALL.md package-lock.json sync-receipt.json artifact/
+          cd artifact
+          sha256sum *.tgz > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fscl-${{ github.sha }}
+          path: artifact/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Remove synthetic server
+        if: always()
+        run: docker rm -f synthetic-actual || true

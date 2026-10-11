@@ -1,3 +1,7 @@
+# Actual 26.10 compatibility fork
+
+Unofficial fork of [fiscal-sh/fscl](https://github.com/fiscal-sh/fscl), based on v0.4.0. Requires Node 22 or newer, pins Actual API 26.10.0, and is not published to npm. See [installation, verification, rollback, and limitations](INSTALL.md) and [provenance](FORK.json). Original MIT license retained.
+
 <img width="960" height="540" alt="fiscal-init" src="https://github.com/user-attachments/assets/92aea807-6851-482a-ac5d-f2090e278586" />
 
 # Fiscal (fscl): Personal Finance Built For Agents

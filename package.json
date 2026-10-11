@@ -1,6 +1,6 @@
 {
   "name": "fscl",
-  "version": "0.4.0-actual26.10.0.1",
+  "version": "0.4.0-actual26.10.0.2",
   "private": true,
   "description": "Headless CLI for Actual Budget",
   "type": "module",
@@ -10,22 +10,20 @@
     "fiscal": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "FORK.json",
+    "INSTALL.md"
   ],
-  "publishConfig": {
-    "provenance": true,
-    "access": "public"
-  },
   "engines": {
     "node": ">=22"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/fiscal-sh/fscl.git"
+    "url": "https://github.com/srobroek/fscl.git"
   },
   "homepage": "https://fiscal.sh",
   "bugs": {
-    "url": "https://github.com/fiscal-sh/fscl/issues"
+    "url": "https://github.com/srobroek/fscl/issues"
   },
   "scripts": {
     "build": "tsup",
