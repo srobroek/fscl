@@ -1,6 +1,6 @@
 {
   "name": "fscl",
-  "version": "0.4.0-actual26.10.0.2",
+  "version": "0.4.0-actual26.10.0.3",
   "private": true,
   "description": "Headless CLI for Actual Budget",
   "type": "module",

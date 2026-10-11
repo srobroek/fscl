@@ -5,10 +5,10 @@
   "upstream_release": "v0.4.0",
   "upstream_author": "benbjurstrom",
   "license": "MIT; original LICENSE retained unchanged",
-  "patch_scope": "Pin Actual API 26.10.0; Node >=22; portable upstream test launcher; preserve opaque passwords; synthetic tests and artifact-only build. No npm publication.",
+  "patch_scope": "Pin Actual API 26.10.0; Node >=22; portable upstream test launcher; preserve opaque passwords; synthetic tests and artifact-only build. No npm publication. Budget reads and writes preserve all existing or unset feature preferences; remove automatic feature defaults.",
   "official_upstream_release": false,
   "production_credentials_in_repository": false,
   "validation": "See GitHub Actions for results tied to the exact commit. Tests use disposable synthetic budgets only.",
   "maintenance": "Monitor upstream releases; rebase the minimal patch and repeat compatibility tests before adopting changes. No assertion that upstream is abandoned.",
-  "known_behavior": "Inherited withBudget initialization can update and sync feature preferences even during nominal read commands. Do not present generic live reads as strictly non-mutating."
+  "known_behavior": "Feature preferences are left to Actual and explicit user changes. Normal configured server synchronization still applies; this does not make all native read operations side-effect-free."
 }

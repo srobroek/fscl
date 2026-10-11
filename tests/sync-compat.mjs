@@ -30,6 +30,14 @@ function run(client, args) {
   const lines = output.trim().split('\n');
   return JSON.parse(lines.at(-1));
 }
+function preferenceSnapshot(client, seed) {
+  const config = JSON.parse(readFileSync(client.configFile, 'utf8'));
+  const env = { ...process.env };
+  for (const key of Object.keys(env)) if (/^(ACTUAL|FISCAL)_/.test(key)) delete env[key];
+  return JSON.parse(execFileSync(process.execPath,
+    [join(repo, 'tests', 'preference-fixture.mjs'), client.data, config.activeBudgetId, seed ? 'seed' : 'read'],
+    { cwd: repo, env, encoding: 'utf8', input: JSON.stringify(seed ?? {}), stdio: ['pipe', 'pipe', 'pipe'] }));
+}
 async function request(path, body) {
   const r = await fetch(new URL(path, server), body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {});
   assert(r.ok, `Synthetic endpoint ${path} failed with HTTP ${r.status}`);
@@ -46,6 +54,13 @@ try {
   assert(token);
   const [writer, reader] = clients;
   const created = run(writer, ['--offline', 'budgets', 'create', 'Synthetic fscl compatibility']);
+  const expectedPreferences = preferenceSnapshot(writer, {
+    'flags.budgetAnalysisReport': 'true', 'flags.formulaMode': 'true',
+    'flags.actionTemplating': 'true', 'flags.customThemes': 'true',
+    'flags.goalTemplatesEnabled': 'false', 'flags.goalTemplatesUIEnabled': 'false',
+    'flags.crossoverReport': 'true',
+    'dashboard.syntheticSelection': '{"page":"synthetic-page","layout":["synthetic-widget"]}',
+  });
   const config = JSON.parse(readFileSync(writer.configFile, 'utf8'));
   writeFileSync(writer.configFile, JSON.stringify({ ...config, serverURL: server, token }), { mode: 0o600 });
   writeFileSync(reader.configFile, JSON.stringify({ dataDir: reader.data, serverURL: server, token }), { mode: 0o600 });
@@ -62,7 +77,9 @@ try {
   const refreshed = run(reader, ['--fresh', 'transactions', 'list', account.id, '--start', '2026-10-01', '--end', '2026-10-31']);
   assert.equal(refreshed.count, 2);
   assert.deepEqual(refreshed.data.map(r => r.amount).sort((a,b) => a-b), [-1234,321]);
-  const receipt = { passed: true, scope: 'synthetic only', apiVersion: '26.10.0', upstreamRevision: '69206dd8a8b9621939b653bc9c3e735fdfcdb13a', budgetCreated: !!created.id, uploadPassed: true, cliWritesPassed: true, independentClientPullPassed: true, incrementalSyncPassed: true, privateFinancialDataUsed: false, productionTouched: false, temporaryCredentialsRemoved: true };
+  assert.deepEqual(preferenceSnapshot(writer), expectedPreferences, 'Writer preferences changed');
+  assert.deepEqual(preferenceSnapshot(reader), expectedPreferences, 'Synced reader preferences changed');
+  const receipt = { preferencesPreserved: true, passed: true, scope: 'synthetic only', apiVersion: '26.10.0', upstreamRevision: '69206dd8a8b9621939b653bc9c3e735fdfcdb13a', budgetCreated: !!created.id, uploadPassed: true, cliWritesPassed: true, independentClientPullPassed: true, incrementalSyncPassed: true, privateFinancialDataUsed: false, productionTouched: false, temporaryCredentialsRemoved: true };
   const output = process.env.FSCL_COMPAT_RECEIPT;
   if (output) writeFileSync(output, JSON.stringify(receipt, null, 2));
   console.log(JSON.stringify(receipt));

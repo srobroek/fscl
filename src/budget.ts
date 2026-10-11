@@ -3,7 +3,7 @@ import { mkdirSync } from 'node:fs';
 import { api, type ActualInitConfig } from './actual-api.js';
 
 import { CliError, ErrorCodes } from './cli.js';
-import { send, setActiveInternalApi } from './commands/common.js';
+import { setActiveInternalApi } from './commands/common.js';
 import { getDefaultDataDir, readConfig } from './config.js';
 import {
   assertBetterSqliteAvailable,
@@ -20,16 +20,6 @@ import type {
   SessionOptions,
 } from './types.js';
 import { normalizeVersionMismatchError } from './versions.js';
-
-const AGENT_FEATURE_DEFAULTS: ReadonlyArray<{ id: string; value: 'true' | 'false' }> = [
-  { id: 'flags.goalTemplatesEnabled', value: 'true' },
-  { id: 'flags.goalTemplatesUIEnabled', value: 'true' },
-  { id: 'flags.actionTemplating', value: 'true' },
-  { id: 'flags.formulaMode', value: 'true' },
-  { id: 'flags.budgetAnalysisReport', value: 'false' },
-  { id: 'flags.crossoverReport', value: 'false' },
-  { id: 'flags.customThemes', value: 'false' },
-];
 
 /** Re-sync before reads when the last successful sync is older than this. */
 const SYNC_STALE_AFTER_MS = 5 * 60 * 1000;
@@ -81,25 +71,6 @@ async function syncBeforeRead(resolved: ResolvedSessionOptions): Promise<void> {
       }),
     );
   }
-}
-
-async function ensureAgentFeatureDefaults(): Promise<boolean> {
-  const prefs = (await send('preferences/get', undefined)) as
-    | Record<string, unknown>
-    | undefined;
-
-  let changed = false;
-  for (const feature of AGENT_FEATURE_DEFAULTS) {
-    if (prefs?.[feature.id] === feature.value) {
-      continue;
-    }
-    await send('preferences/save', {
-      id: feature.id,
-      value: feature.value,
-    });
-    changed = true;
-  }
-  return changed;
 }
 
 function resolveSession(options: SessionOptions = {}): ResolvedSessionOptions {
@@ -187,11 +158,11 @@ export async function withBudget<T>(
     if (resolved.serverURL) {
       await syncBeforeRead(resolved);
     }
-    const updatedFeatureDefaults = await ensureAgentFeatureDefaults();
+    // Loading a budget must preserve user feature choices, including unset values.
     try {
       return await fn(resolved);
     } finally {
-      if (resolved.serverURL && (resolved.write || updatedFeatureDefaults)) {
+      if (resolved.serverURL && resolved.write) {
         await tryAutoSync(resolved);
       }
     }
