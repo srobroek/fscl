@@ -1,6 +1,7 @@
 {
   "name": "fscl",
-  "version": "0.4.0",
+  "version": "0.4.0-actual26.10.0.1",
+  "private": true,
   "description": "Headless CLI for Actual Budget",
   "type": "module",
   "main": "dist/index.js",
@@ -16,7 +17,7 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "repository": {
     "type": "git",
@@ -42,7 +43,7 @@
   "author": "benbjurstrom",
   "license": "MIT",
   "dependencies": {
-    "@actual-app/api": "26.8.1",
+    "@actual-app/api": "26.10.0",
     "@clack/prompts": "^1.0.1",
     "better-sqlite3": "^12.6.2",
     "commander": "^13.1.0",

@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -98,7 +98,7 @@ export function runCli(
   ].join(' ');
 
   try {
-    const stdout = execSync(command, {
+    const stdout = execFileSync(process.execPath, ['--import', 'tsx', CLI_PATH, ...args], {
       cwd,
       env: { ...process.env, ...env },
       encoding: 'utf8',

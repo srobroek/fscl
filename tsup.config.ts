@@ -9,7 +9,7 @@ export default defineConfig({
   clean: true,
   minify: false,
   splitting: true,
-  target: 'node20',
+  target: 'node22',
   shims: false,
   banner: {
     js: '#!/usr/bin/env node',

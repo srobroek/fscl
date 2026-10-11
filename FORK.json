@@ -1,0 +1,14 @@
+{
+  "purpose": "Private compatibility fork for Actual Budget 26.10.0",
+  "upstream": "https://github.com/fiscal-sh/fscl",
+  "upstream_revision": "69206dd8a8b9621939b653bc9c3e735fdfcdb13a",
+  "upstream_release": "v0.4.0",
+  "upstream_author": "benbjurstrom",
+  "license": "MIT; original LICENSE retained unchanged",
+  "patch_scope": "Pin @actual-app/api 26.10.0 and require/build for Node >=22; mark this private build distinctly and prohibit npm publication. Test helper uses execFileSync argument arrays so upstream tests run on Windows without shell quoting failures.",
+  "official_upstream_release": false,
+  "production_credentials_in_repository": false,
+  "validation": "Type-check and 27 upstream tests passed. Isolated Actual 26.10.0 upload, CLI writes, independent-client pull and incremental sync passed. Restored private-budget active entities survived read/export unchanged. No production authentication or writes performed.",
+  "maintenance": "Monitor upstream releases; rebase the minimal patch and repeat compatibility tests before adopting changes. No assertion that upstream is abandoned.",
+  "known_behavior": "Inherited withBudget initialization can update and sync feature preferences even during nominal read commands. Do not present generic live reads as strictly non-mutating."
+}
